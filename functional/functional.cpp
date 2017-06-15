@@ -287,6 +287,8 @@ int main()
 		auto opt2 = boost::make_optional(2);
 
 		assert(apply(optf, opt2) == boost::make_optional(3));
+
+		// Need curried functions to make applicative really shine...
 	}
 
     return 0;
