@@ -4,17 +4,17 @@
 
 namespace functional
 {
-	namespace transformable
+	namespace monad
 	{
 		template <class T>
 		struct typeclass : ninstance {};
 
-		struct transform_impl
+		struct mbind_impl
 		{
 			template <class F, class T>
 			auto operator()(F&& f, T&& t) const
 			{
-				instance_of_t<T, typeclass>::transform(
+				return instance_of_t<T, typeclass>::mbind(
 					std::forward<F>(f),
 					std::forward<T>(t));
 			}
@@ -24,13 +24,11 @@ namespace functional
 			{
 				return[f = std::forward<F>(f)](auto&& t)
 				{
-					transform(
-						std::forward<F>(f),
-						std::forward<T>(t));
+					return mbind(f, std::forward<decltype(t)>(t));
 				};
 			}
 		};
 
-		constexpr transform_impl transform{};
+		constexpr mbind_impl mbind{};
 	}
 }

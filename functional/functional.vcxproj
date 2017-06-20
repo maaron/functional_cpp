@@ -146,14 +146,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="applicative.h" />
+    <ClInclude Include="category.h" />
     <ClInclude Include="enumerable.h" />
     <ClInclude Include="functor.h" />
     <ClInclude Include="meta.h" />
+    <ClInclude Include="monad.h" />
     <ClInclude Include="monoid.h" />
+    <ClInclude Include="optional.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="transformable.h" />
     <ClInclude Include="typeclass.h" />
+    <ClInclude Include="container.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="functional.cpp" />

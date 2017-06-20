@@ -10,201 +10,27 @@
 #include <memory>
 #include <boost/optional.hpp>
 
-#include "meta.h"
-
 #include "functor.h"
 #include "transformable.h"
 #include "monoid.h"
 #include "enumerable.h"
 #include "applicative.h"
+#include "category.h"
 
-namespace functional
+#include "container.h"
+#include "optional.h"
+
+template <class F, class A>
+auto operator| (A&& a, F&& f)
 {
-	template <class T>
-	struct functor::typeclass<std::vector<T>> : instance
-	{
-		template <typename F>
-		static std::vector<T> fmap(F&& f, const std::vector<T> v)
-		{
-			std::vector<T> copy;
-			std::transform(v.begin(), v.end(),
-				std::back_inserter(copy), std::forward<F>(f));
-			return copy;
-		}
-	};
-
-	template <class T>
-	struct transformable::typeclass<std::vector<T>> : instance
-	{
-		template <typename F>
-		static void transform(F&& f, std::vector<T>& v)
-		{
-			std::vector<T> copy;
-			std::transform(v.begin(), v.end(),
-				v.begin(), std::forward<F>(f));
-		}
-	};
-
-	template <>
-	struct monoid::typeclass<std::string>
-	{
-		static std::string mzero() { return ""; }
-
-		static std::string mappend(std::string a, std::string b)
-		{
-			return a.append(b);
-		}
-	};
-
-	template <typename Iter>
-	struct iterator_pair
-	{
-		Iter current;
-		Iter end;
-	};
-
-	template <typename Container>
-	struct iterator_pair_storage
-	{
-		typedef typename Container::iterator Iter;
-		std::shared_ptr<Container> container;
-		Iter current;
-		Iter end;
-	};
-
-	template <class T>
-	struct enumerable::typeclass<std::vector<T>> : instance
-	{
-		typedef typename std::vector<T>::iterator iterator_t;
-
-		template <typename T>
-		static iterator_pair<iterator_t> enumerate(std::vector<T>& v)
-		{
-			return iterator_pair<iterator_t>{std::begin(v), std::end(v)};
-		}
-
-		template <typename T>
-		static iterator_pair_storage<std::vector<T>> enumerate(std::vector<T>&& v)
-		{
-			auto container = std::make_shared<std::vector<T>>(std::move(v));
-			return iterator_pair_storage<std::vector<T>>{
-				container, std::begin(*container), std::end(*container)};
-		}
-	};
-
-	template <class T>
-	struct enumerator::typeclass<iterator_pair<T>> : instance
-	{
-		template <typename T>
-		static bool is_end(const iterator_pair<T>& pair)
-		{
-			return pair.current == pair.end;
-		}
-
-		template <typename T>
-		static auto current(const iterator_pair<T>& pair)
-		{
-			return *pair.current;
-		}
-
-		template <typename T>
-		static iterator_pair<T> next(const iterator_pair<T>& pair)
-		{
-			return iterator_pair<T>{std::next(pair.current), pair.end};
-		}
-	};
-
-	template <class T>
-	struct enumerator::typeclass<iterator_pair_storage<T>> : instance
-	{
-		template <typename T>
-		static bool is_end(const iterator_pair_storage<T>& pair)
-		{
-			return pair.current == pair.end;
-		}
-
-		template <typename T>
-		static auto current(const iterator_pair_storage<T>& pair)
-		{
-			return *pair.current;
-		}
-
-		template <typename T>
-		static iterator_pair_storage<T> next(const iterator_pair_storage<T>& pair)
-		{
-			return iterator_pair_storage<T>{pair.container, std::next(pair.current), pair.end};
-		}
-	};
-
-	template <class T>
-	struct applicative::typeclass<boost::optional<T>> : instance
-	{
-		typedef T of_type;
-
-		template <class T>
-		static boost::optional<T> pure(T&& t)
-		{
-			return boost::make_optional(
-				std::forward<T>(t));
-		}
-
-		template <class F, class T>
-		static auto apply(boost::optional<F>& optf, boost::optional<T>& opt)
-		{
-			typedef decltype(optf.get()(opt.get())) R;
-			if (optf && opt)
-			{
-				return boost::make_optional(
-					optf.get()(opt.get()));
-			}
-			else return boost::optional<R>();
-		}
-	};
-
-	namespace composable
-	{
-		struct compose_impl
-		{
-			template <class F, class G>
-			auto operator()(F&& f, G&& g)
-			{
-				return [&f, &g](auto&& a)
-				{
-					return f(g(a));
-				};
-			}
-
-			template <class F>
-			auto operator()(F&& f)
-			{
-				return [&f](auto&& g)
-				{
-					return compose(f, g);
-				};
-			}
-		};
-
-		compose_impl compose;
-
-		template <class F, class G>
-		auto operator >> (F&& f, G&& g) { return compose(g, f); }
-
-		template <class F, class G>
-		auto operator << (F&& f, G&& g) { return compose(f, g); }
-
-		template <class F, class A>
-		auto operator| (A&& a, F&& f)
-		{
-			return f(std::forward<A>(a));
-		}
-	}
+	return f(std::forward<A>(a));
 }
 
 int main()
 {
 	using namespace functional::functor;
 	using namespace functional::transformable;
-	using namespace functional::composable;
+	using namespace functional::category;
 	using namespace functional::monoid;
 
 	std::vector<int> v = { 1, 2, 3 };
@@ -287,6 +113,7 @@ int main()
 		auto opt2 = boost::make_optional(2);
 
 		assert(apply(optf, opt2) == boost::make_optional(3));
+		assert(apply(optf, boost::none) == boost::none);
 
 		// Need curried functions to make applicative really shine...
 	}

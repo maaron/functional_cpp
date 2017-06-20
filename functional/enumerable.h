@@ -12,7 +12,7 @@ namespace functional
 			template <class T>
 			auto operator()(T&& t) const
 			{
-				return typeclass<std::remove_reference<T>::type>::enumerate(
+				return instance_of_t<T, typeclass>::enumerate(
 					std::forward<T>(t));
 			}
 		};
@@ -30,7 +30,7 @@ namespace functional
 			template <class T>
 			bool operator()(T&& t) const
 			{
-				return typeclass<std::remove_reference<T>::type>::is_end(
+				return instance_of_t<T, typeclass>::is_end(
 					std::forward<T>(t));
 			}
 		};
@@ -42,7 +42,7 @@ namespace functional
 			template <class T>
 			auto operator()(T&& t) const
 			{
-				return typeclass<std::remove_reference<T>::type>::current(
+				return instance_of_t<T, typeclass>::current(
 					std::forward<T>(t));
 			}
 		};
@@ -54,7 +54,7 @@ namespace functional
 			template <class T>
 			auto operator()(T&& t) const
 			{
-				return typeclass<std::remove_reference<T>::type>::next(
+				return instance_of_t<T, typeclass>::next(
 					std::forward<T>(t));
 			}
 		};

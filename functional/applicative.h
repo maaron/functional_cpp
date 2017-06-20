@@ -1,6 +1,7 @@
 #pragma once
 
 #include "typeclass.h"
+#include "meta.h"
 
 namespace functional
 {
@@ -11,6 +12,9 @@ namespace functional
 		{
 			typedef void of_type;
 		};
+
+		template <class T>
+		struct pure_value { T value; };
 
 		struct apply_impl
 		{
@@ -31,22 +35,9 @@ namespace functional
 			};
 
 			template <class F, class T>
-
-
-			template <class F, class T>
 			auto operator()(F&& f, T&& t) const
 			{
-				using Finst = instance_of<F, typeclass>;
-				using Tinst = instance_of<T, typeclass>;
-				
-				static_assert(Finst::value, "F must have an applicative instance");
-				static_assert(Tinst::value, "T must have an applicative instance");
-				static_assert(is_invocable<
-					Finst::instance::of_type, 
-					Tinst::instance::of_type>::value,
-					"F must have a type argument that is callable with the type argument of T");
-
-				return typeclass<std::remove_reference<T>::type>::apply(
+				return typeclass<std::decay<T>::type>::apply(
 					std::forward<F>(f),
 					std::forward<T>(t));
 			}
@@ -65,7 +56,7 @@ namespace functional
 			{
 				return apply(
 					std::forward<F>(f),
-					typeclass<std::remove_reference<F>::type>::pure(
+					typeclass<remove_rcv<F>::type>::pure(
 						std::forward<pure_value<T>>(pv)));
 			}
 
@@ -73,16 +64,13 @@ namespace functional
 			auto operator()(pure_value<F>&& pv, T&& t)
 			{
 				return apply(
-					typeclass<std::remove_reference<F>::type>::pure(
+					typeclass<remove_rcv<F>::type>::pure(
 						std::forward<pure_value<F>>(pv)),
 					std::forward<T>(t));
 			}
 		};
 		// Applicative f => f (a -> b) -> f a -> f b
 		constexpr apply_impl apply{};
-
-		template <class T>
-		struct pure_value { T value; };
 
 		struct pure_impl
 		{
