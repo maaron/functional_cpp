@@ -118,6 +118,14 @@ int main()
 		// Need curried functions to make applicative really shine...
 	}
 
+	{
+		using namespace functional::monad;
+
+		auto plus1Opt = [](auto&& x) { return boost::make_optional(x + 1); };
+		auto opt2 = boost::make_optional(2);
+		assert(mbind(plus1Opt, opt2) == boost::make_optional(3));
+	}
+
     return 0;
 }
 

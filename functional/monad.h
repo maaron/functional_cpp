@@ -32,3 +32,19 @@ namespace functional
 		constexpr mbind_impl mbind{};
 	}
 }
+
+/*
+
+m >>= [=](auto&& x) { x + 1; }
+
+MDO(
+	(x, m),
+	(x + 1)
+)
+
+*/
+#define ARG1(a, b) a
+
+#define ARG2(a, b) b
+
+#define MDO(bindexp, retexp) (ARG2(bindexp) >>= [=](auto&& ARG1(bindexp)) { retexp; })

@@ -21,14 +21,14 @@ namespace functional
 			template <class Instance>
 			struct lift_value
 			{
-				template <class T, class Instance>
-				auto of(T&& t)
+				template <class T>
+				static auto of(T&& t)
 				{
 					return std::forward<T>(t);
 				}
 
-				template <class T, class Instance>
-				auto of(pure_value<T>&& pv)
+				template <class T>
+				static auto of(pure_value<T>&& pv)
 				{
 					return Instance::pure(std::forward<T>(pv.value));
 				}
@@ -38,7 +38,7 @@ namespace functional
 			auto operator()(F&& f, T&& t) const
 			{
 				return typeclass<std::decay<T>::type>::apply(
-					std::forward<F>(f),
+					lift_value<typeclass<std::decay<T>::type>>::of(std::forward<F>(f)),
 					std::forward<T>(t));
 			}
 
@@ -50,24 +50,6 @@ namespace functional
 					return apply(f, std::forward<decltype(t)>(t));
 				}
 			}
-
-			template <class F, class T>
-			auto operator()(F&& f, pure_value<T>&& pv)
-			{
-				return apply(
-					std::forward<F>(f),
-					typeclass<remove_rcv<F>::type>::pure(
-						std::forward<pure_value<T>>(pv)));
-			}
-
-			template <class F, class T>
-			auto operator()(pure_value<F>&& pv, T&& t)
-			{
-				return apply(
-					typeclass<remove_rcv<F>::type>::pure(
-						std::forward<pure_value<F>>(pv)),
-					std::forward<T>(t));
-			}
 		};
 		// Applicative f => f (a -> b) -> f a -> f b
 		constexpr apply_impl apply{};
@@ -77,7 +59,7 @@ namespace functional
 			template <class T>
 			auto operator()(T&& t) const
 			{
-				return pure_value{ std::forward<T>(t) };
+				return pure_value<std::remove_reference<T>::type>{ std::forward<T>(t) };
 			}
 		};
 		// Applicative f => a -> f a
